@@ -1,11 +1,14 @@
 package main
 
-import . "github.com/splace/joysticks"
-import "fmt"
-import  "time"
+import (
+	"fmt"
+	"time"
+
+	joysticks "github.com/Nick-Zuchlewski/joysticks"
+)
 
 func main() {
-	device := Connect(1)
+	device, _ := joysticks.Connect(1)
 
 	if device == nil {
 		panic("no HIDs")
@@ -17,29 +20,28 @@ func main() {
 	b2press := device.OnClose(2)
 	h1move := device.OnMove(1)
 
-	// feed OS events onto the event channels. 
+	// feed OS events onto the event channels.
 	go device.ParcelOutEvents()
 
 	// handle event channels
-	go func(){
-		for{
+	go func() {
+		for {
 			select {
 			case <-b1press:
 				fmt.Println("button #1 pressed")
 			case <-b2press:
 				fmt.Println("button #2 pressed")
 				coords := make([]float32, 2)
-				device.HatCoords(1,coords)
-				fmt.Println("current hat #1 position:",coords)
+				device.HatCoords(1, coords)
+				fmt.Println("current hat #1 position:", coords)
 			case h := <-h1move:
-				hpos:=h.(CoordsEvent)
-				fmt.Println("hat #1 moved too:", hpos.X,hpos.Y)
+				hpos := h.(joysticks.CoordsEvent)
+				fmt.Println("hat #1 moved too:", hpos.X, hpos.Y)
 			}
 		}
 	}()
-	
+
 	fmt.Println("Timeout in 10 secs.")
-	<-time.After(time.Second*10)
+	<-time.After(time.Second * 10)
 	fmt.Println("Shutting down due to timeout.")
 }
-
